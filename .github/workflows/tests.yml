@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -96,6 +97,7 @@ jobs:
   e2e:
     # Playwright 1.59 does not support ubuntu-latest's Ubuntu 26.04 image.
     runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     needs:
       - backend
       - frontend
