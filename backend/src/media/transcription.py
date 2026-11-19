@@ -414,6 +414,23 @@ def _get_transcript_with_assemblyai(
 
 def _get_transcript_with_whisper(video_path: Path, runtime_config) -> str:
     """Get transcript using local Whisper with word-level timestamps."""
+    cache_path = video_path.with_suffix(".transcript_cache.json")
+    if cache_path.is_file():
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                cached = json.load(f)
+            formatted_lines = []
+            for u in cached.get("utterances", []):
+                s = format_ms_to_timestamp(int(u.get("start", 0)))
+                e = format_ms_to_timestamp(int(u.get("end", 0)))
+                formatted_lines.append(f"[{s} - {e}] {u.get('text', '').strip()}")
+            if formatted_lines:
+                result = "\n".join(formatted_lines)
+                logger.info("Loaded cached Whisper transcript: %d segments, %d chars", len(formatted_lines), len(result))
+                return result
+        except Exception as exc:
+            logger.warning("Failed to load transcript cache (%s); proceeding with fresh transcribe", exc)
+
     model_name = runtime_config.whisper_model
     logger.info("Starting Whisper transcription with model: %s", model_name)
     whisper_result = transcribe_with_whisper(
