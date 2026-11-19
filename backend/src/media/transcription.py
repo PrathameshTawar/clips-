@@ -335,10 +335,8 @@ def get_video_transcript(
         return _get_transcript_with_whisper(video_path, runtime_config)
     if provider == "youtube_captions":
         if not source_url:
-            raise ValueError(
-                "youtube_captions provider requires a YouTube URL. "
-                "Pass source_url to get_video_transcript()."
-            )
+            logger.info("Non-YouTube source with youtube_captions provider; falling back to Whisper")
+            return _get_transcript_with_whisper(video_path, runtime_config)
         return _get_transcript_with_youtube_captions(source_url)
     return _get_transcript_with_assemblyai(video_path, speech_model, runtime_config)
 
